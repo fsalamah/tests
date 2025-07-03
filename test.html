@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transfer Page with Bugs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .fee-banner {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .summary {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="fee-banner" id="feeBanner">
+            Transfer Fee Banner: Fixed Fee of 3 JOD 
+            <span id="waiveFeeText">(Waived for transfers ≥ 100 JOD)</span>
+        </div>
+
+        <div class="form-group">
+            <label for="fromAccount">From Account</label>
+            <input type="text" id="fromAccount" value="123456789" readonly>
+        </div>
+
+        <div class="form-group">
+            <label for="toAccount">To Account</label>
+            <input type="text" id="toAccount" placeholder="Enter recipient account number" required>
+        </div>
+
+        <div class="form-group">
+            <label for="amount">Transfer Amount (JOD)</label>
+            <input type="number" id="amount" step="0.01" placeholder="Enter amount" required min="0">
+        </div>
+
+        <div class="summary" id="summary">
+            <h3>Transfer Summary</h3>
+            <p>Transfer Amount: <span id="summaryAmount">0.00</span> JOD</p>
+            <p>Transfer Fee: <span id="summaryFee">3</span> JOD</p>
+            <p><strong>Total Amount: <span id="summaryTotal">0.00</span> JOD</strong></p>
+        </div>
+
+        <button class="submit-btn" id="submitTransfer">Submit Transfer</button>
+    </div>
+
+    <script>
+        // Global variables
+        const fromAccountEl = document.getElementById('fromAccount');
+        const toAccountEl = document.getElementById('toAccount');
+        const amountEl = document.getElementById('amount');
+        const summaryAmountEl = document.getElementById('summaryAmount');
+        const summaryFeeEl = document.getElementById('summaryFee');
+        const summaryTotalEl = document.getElementById('summaryTotal');
+        const submitBtn = document.getElementById('submitTransfer');
+        const feeBannerEl = document.getElementById('feeBanner');
+        const waiveFeeTextEl = document.getElementById('waiveFeeText');
+
+        // Configurable transfer fee settings
+        const FIXED_TRANSFER_FEE = 3; // Fixed transfer fee in JOD
+        let waiveFeeThreshold = 100; // Default threshold for fee waiver
+
+        // Parse waive fee threshold from query string
+        function initializeWaiveFeeThreshold() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const thresholdParam = urlParams.get('waiveFeeThreshold');
+            
+            if (thresholdParam) {
+                waiveFeeThreshold = parseFloat(thresholdParam);
+                waiveFeeTextEl.textContent = `(Waived for transfers ≥ ${waiveFeeThreshold} JOD)`;
+            }
+        }
+
+        // BUG: Incorrect fee calculation using Math.ceil() which may incorrectly waive fee
+        function calculateFee(inputAmount) {
+            // Bug: Using Math.ceil() to determine fee waiver
+            return Math.ceil(inputAmount) >= waiveFeeThreshold ? 0 : FIXED_TRANSFER_FEE;
+        }
+
+        // BUG: Total calculation always includes full transfer fee even if waived
+        function calculateTotal(inputAmount) {
+            const parsedAmount = parseFloat(inputAmount) || 0;
+            // Bug: Always adds full fee regardless of waiver
+            return parsedAmount + FIXED_TRANSFER_FEE;
+        }
+
+        // Update summary when amount changes
+        function updateSummary() {
+            const amount = amountEl.value;
+            
+            // Update summary amount
+            summaryAmountEl.textContent = amount ? parseFloat(amount).toFixed(2) : '0.00';
+            
+            // Calculate and display fee
+            const fee = calculateFee(parseFloat(amount));
+            summaryFeeEl.textContent = fee.toFixed(2);
+            
+            // Calculate and display total
+            const total = calculateTotal(amount);
+            summaryTotalEl.textContent = total.toFixed(2);
+        }
+
+        // Handle transfer submission
+        function handleSubmit() {
+            const fromAccount = fromAccountEl.value;
+            const toAccount = toAccountEl.value;
+            const amount = amountEl.value;
+            const fee = calculateFee(parseFloat(amount));
+            const total = calculateTotal(amount);
+
+            alert(`Transfer Submitted:
+From Account: ${fromAccount}
+To Account: ${toAccount}
+Amount: ${amount} JOD
+Transfer Fee: ${fee} JOD
+Total: ${total} JOD`);
+        }
+
+        // Event Listeners
+        amountEl.addEventListener('input', updateSummary);
+        submitBtn.addEventListener('click', handleSubmit);
+
+        // Initialize on page load
+        initializeWaiveFeeThreshold();
+        updateSummary();
+    </script>
+</body>
+</html>
