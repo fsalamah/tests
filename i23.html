@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Search</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: white;
+            font-size: 2.8rem;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #ffd700;
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .search-section {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 40px;
+        }
+        
+        .search-box {
+            display: flex;
+            max-width: 700px;
+            margin: 0 auto;
+            height: 60px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 0 20px;
+            font-size: 1.1rem;
+            border: 2px solid #4a69bd;
+            border-radius: 12px 0 0 12px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        .search-box input:focus {
+            border-color: #1e3799;
+            box-shadow: 0 0 0 3px rgba(30, 55, 153, 0.2);
+        }
+        
+        .search-box button {
+            background: #4a69bd;
+            color: white;
+            border: none;
+            padding: 0 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 0 12px 12px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .search-box button:hover {
+            background: #1e3799;
+        }
+        
+        .results-container {
+            display: none;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .results-title {
+            font-size: 1.8rem;
+            color: #1a2a6c;
+        }
+        
+        .product-count {
+            background: #4a69bd;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+        }
+        
+        /* Complex product card structure */
+        .product-container {
+            perspective: 1000px;
+        }
+        
+        .product-wrapper {
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            height: 100%;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            backface-visibility: hidden;
+        }
+        
+        /* Product image section */
+        .product-image-section {
+            position: relative;
+            height: 200px;
+            background: #f8f9fa;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .product-image-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* ALL elements use the same class name */
+        .node {
+            max-width: 100%;
+            max-height: 160px;
+            object-fit: contain;
+            transition: transform 0.3s;
+        }
+        
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(26, 42, 108, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        /* Product info section - all elements use the same class */
+        .product-info-section {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .node {
+            font-size: 0.85rem;
+            color: #6c757d;
+            background: #f1f3f5;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        
+        .node {
+            color: #ffc107;
+        }
+        
+        .node {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        
+        .node {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1a2a6c;
+            line-height: 1.3;
+            margin: 5px 0;
+        }
+        
+        /* Product details */
+        .product-details {
+            margin-top: auto;
+            padding-top: 15px;
+        }
+        
+        .node {
+            font-size: 0.95rem;
+            color: #495057;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            height: 60px;
+            overflow: hidden;
+        }
+        
+        .product-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .node {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #e63946;
+        }
+        
+        .add-to-cart {
+            background: #4a69bd;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .add-to-cart:hover {
+            background: #1e3799;
+            transform: translateY(-2px);
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 50px 0;
+            font-size: 1.2rem;
+            color: #6c757d;
+            grid-column: 1 / -1;
+        }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 40px;
+            color: white;
+            max-width: 800px;
+            margin: 40px auto 0;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .instructions p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        
+        .instructions code {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        
+        @media (max-width: 768px) {
+            .search-box {
+                height: 50px;
+            }
+            
+            .product-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Product Explorer</h1>
+            <p class="subtitle">Search our Catalog</p>
+        </header>
+        
+        <section class="search-section">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Search for products...">
+                <button id="search-button">Search <i class="fas fa-search"></i></button>
+            </div>
+        </section>
+        
+        <section class="results-container" id="results-container">
+            <div class="results-header">
+                <h2 class="results-title">Search Results</h2>
+                <div class="product-count">8 products</div>
+            </div>
+            
+            <div class="product-grid">
+                <!-- Product 1 - Smartphone -->
+                <div class="product-container">
+                    <div class="product-wrapper">
+                        <div class="product-card">
+                            <div class="product-image-section">
+                                <div class="image-overlay"></div>
+                                <div class="product-image-container">
+                                    <img src="https://images.unsplash.com/photo-1598327105666-5b89351aff97?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" class="node" alt="Smartphone">
+                                </div>
+                            </div>
+                            
+                            <div class="product-info-section">
+                                <div class="node">SKU: ELEC-001</div>
+                                <div class="node">
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star-half-alt node"></i>
+                                </div>
+                                <div class="node">PRODUCT NAME</div>
+                                <div class="node">Premium Smartphone X1</div>
+                                <div class="node">Advanced smartphone with 6.7" OLED display, triple camera system, and 5G connectivity.</div>
+                                <div class="node">$899.99</div>
+                                <button class="add-to-cart">Add to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Product 2 - Laptop -->
+                <div class="product-container">
+                    <div class="product-wrapper">
+                        <div class="product-card">
+                            <div class="product-image-section">
+                                <div class="image-overlay"></div>
+                                <div class="product-image-container">
+                                    <img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" class="node" alt="Laptop">
+                                </div>
+                            </div>
+                            
+                            <div class="product-info-section">
+                                <div class="node">SKU: ELEC-002</div>
+                                <div class="node">
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="far fa-star node"></i>
+                                </div>
+                                <div class="node">PRODUCT NAME</div>
+                                <div class="node">Ultrabook Pro 15"</div>
+                                <div class="node">Slim and powerful laptop with 15" display, 16GB RAM, and 1TB SSD storage.</div>
+                                <div class="node">$1,299.99</div>
+                                <button class="add-to-cart">Add to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Product 3 - Headphones -->
+                <div class="product-container">
+                    <div class="product-wrapper">
+                        <div class="product-card">
+                            <div class="product-image-section">
+                                <div class="image-overlay"></div>
+                                <div class="product-image-container">
+                                    <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" class="node" alt="Headphones">
+                                </div>
+                            </div>
+                            
+                            <div class="product-info-section">
+                                <div class="node">SKU: AUD-001</div>
+                                <div class="node">
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                </div>
+                                <div class="node">PRODUCT NAME</div>
+                                <div class="node">Wireless Noise-Canceling Headphones</div>
+                                <div class="node">Premium over-ear headphones with active noise cancellation and 30-hour battery life.</div>
+                                <div class="node">$349.99</div>
+                                <button class="add-to-cart">Add to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Product 4 - Smartwatch -->
+                <div class="product-container">
+                    <div class="product-wrapper">
+                        <div class="product-card">
+                            <div class="product-image-section">
+                                <div class="image-overlay"></div>
+                                <div class="product-image-container">
+                                    <img src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" class="node" alt="Smartwatch">
+                                </div>
+                            </div>
+                            
+                            <div class="product-info-section">
+                                <div class="node">SKU: WEAR-001</div>
+                                <div class="node">
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star-half-alt node"></i>
+                                    <i class="far fa-star node"></i>
+                                </div>
+                                <div class="node">PRODUCT NAME</div>
+                                <div class="node">Smart Fitness Tracker Pro</div>
+                                <div class="node">Advanced smartwatch with health monitoring, GPS, and 7-day battery life.</div>
+                                <div class="node">$249.99</div>
+                                <button class="add-to-cart">Add to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Product 5 - Camera -->
+                <div class="product-container">
+                    <div class="product-wrapper">
+                        <div class="product-card">
+                            <div class="product-image-section">
+                                <div class="image-overlay"></div>
+                                <div class="product-image-container">
+                                    <img src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" class="node" alt="Camera">
+                                </div>
+                            </div>
+                            
+                            <div class="product-info-section">
+                                <div class="node">SKU: CAM-001</div>
+                                <div class="node">
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star-half-alt node"></i>
+                                </div>
+                                <div class="node">PRODUCT NAME</div>
+                                <div class="node">Mirrorless Camera Pro</div>
+                                <div class="node">Professional mirrorless camera with 4K video and 24.2MP sensor.</div>
+                                <div class="node">$1,199.99</div>
+                                <button class="add-to-cart">Add to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Product 6 - Coffee Maker -->
+                <div class="product-container">
+                    <div class="product-wrapper">
+                        <div class="product-card">
+                            <div class="product-image-section">
+                                <div class="image-overlay"></div>
+                                <div class="product-image-container">
+                                    <img src="https://images.unsplash.com/photo-1595341888016-a392ef81b7de?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" class="node" alt="Coffee Maker">
+                                </div>
+                            </div>
+                            
+                            <div class="product-info-section">
+                                <div class="node">SKU: HOME-001</div>
+                                <div class="node">
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="far fa-star node"></i>
+                                </div>
+                                <div class="node">PRODUCT NAME</div>
+                                <div class="node">Premium Coffee Maker</div>
+                                <div class="node">Programmable coffee maker with thermal carafe and strength control.</div>
+                                <div class="node">$129.99</div>
+                                <button class="add-to-cart">Add to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Product 7 - Backpack -->
+                <div class="product-container">
+                    <div class="product-wrapper">
+                        <div class="product-card">
+                            <div class="product-image-section">
+                                <div class="image-overlay"></div>
+                                <div class="product-image-container">
+                                    <img src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" class="node" alt="Backpack">
+                                </div>
+                            </div>
+                            
+                            <div class="product-info-section">
+                                <div class="node">SKU: BAG-001</div>
+                                <div class="node">
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star-half-alt node"></i>
+                                </div>
+                                <div class="node">PRODUCT NAME</div>
+                                <div class="node">Travel Backpack Pro</div>
+                                <div class="node">Durable backpack with laptop compartment and waterproof material.</div>
+                                <div class="node">$89.99</div>
+                                <button class="add-to-cart">Add to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Product 8 - Speaker -->
+                <div class="product-container">
+                    <div class="product-wrapper">
+                        <div class="product-card">
+                            <div class="product-image-section">
+                                <div class="image-overlay"></div>
+                                <div class="product-image-container">
+                                    <img src="https://images.unsplash.com/photo-1546435770-a3e426bf472b?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" class="node" alt="Speaker">
+                                </div>
+                            </div>
+                            
+                            <div class="product-info-section">
+                                <div class="node">SKU: AUD-002</div>
+                                <div class="node">
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                    <i class="fas fa-star node"></i>
+                                </div>
+                                <div class="node">PRODUCT NAME</div>
+                                <div class="node">Bluetooth Speaker Max</div>
+                                <div class="node">Portable Bluetooth speaker with 360° sound and 20-hour battery.</div>
+                                <div class="node">$199.99</div>
+                                <button class="add-to-cart">Add to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const resultsContainer = document.getElementById('results-container');
+            
+            // Show results when page loads
+            resultsContainer.style.display = 'block';
+            
+            // Search functionality
+            searchButton.addEventListener('click', function() {
+                if (searchInput.value.trim() === '') {
+                    alert('Please enter a search term');
+                    return;
+                }
+                
+                // In a real app, this would fetch actual search results
+                resultsContainer.style.display = 'block';
+                
+                // Scroll to results
+                resultsContainer.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // Allow Enter key to trigger search
+            searchInput.addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    searchButton.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
